@@ -1,5 +1,6 @@
-### Matt Kurtz
-### Lecture 24: A Short Introduction to Exploratory Data Mining
+### Group 9: Matt Kurtz and Riann Yates-Miller
+### ISA401 Group Project: Movie Visualizations
+# NO LONGER BEING USED
 
 
 # Packages ----------------------------------------------------------------
