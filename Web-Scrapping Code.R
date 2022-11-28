@@ -105,7 +105,7 @@ rotten_s1 = read_html(rotten)
   
 
 ## MovieData-API -----------------------------------------------------------
-movie_tbl = read_csv('https://github.com/Kurtzm23/ISA401-FinalProject/raw/main/MovieData.csv')
+movie_tbl = read_csv('https://github.com/Kurtzm23/ISA401-FinalProject/raw/main/MovieAPIdata.csv')
 # problems() --> row 1107, $$ is a character
 
 
