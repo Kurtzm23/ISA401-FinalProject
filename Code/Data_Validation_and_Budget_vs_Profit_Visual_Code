@@ -1,0 +1,94 @@
+### Group 9: Matt Kurtz and Riann Yates-Miller
+### ISA401 Group Project: Movie Visualizations
+### Data Validation and Budget vs Profit Visual
+
+
+## Packages ----------------------------------------------------------------
+if(require(pacman)==FALSE) install.packages('pacman')
+pacman::p_load(tidyverse, rvest, lubridate, httr,
+               openxlsx, # For exporting to excel
+               pointblank, # For validating dataset
+               DataExplorer) # For creating visuals
+
+
+## Data Validation ---------------------------------------------------------
+# I have taken each dataset and separated them into different .CSV files for the purpose of these validation tests
+worst_imdb_dataset = read_csv("IMDB_Worst_Dataset.csv")
+best_imdb_dataset = read_csv("IMDB_Best_Dataset.csv")
+movie_api_dataset = read_csv("Movie_API_Dataset.csv")
+worst_rt_dataset = read_csv("Rotten_Tomatoes_Worst_Dataset.csv")
+best_rt_dataset = read_csv("Rotten_Tomatoes_Best_Dataset.csv")
+# Step 1:
+act = action_levels(warn_at=0.01, notify_at=0.01)
+# Step 2:
+worst_imdb_agent = create_agent(tbl=worst_imdb_dataset, actions=act)
+best_imdb_agent = create_agent(tbl=best_imdb_dataset, actions=act)
+movie_api_agent = create_agent(tbl=movie_api_dataset, actions=act)
+worst_rt_agent = create_agent(tbl=worst_rt_dataset, actions=act)
+best_rt_agent = create_agent(tbl=best_rt_dataset, actions=act)
+# Step 3:
+# Worst IMDB Dataset
+worst_imdb_agent %>%
+  # Technically Correct Checks
+  col_is_date(columns='Year') %>%
+  col_is_factor(columns = c('Title', 'Genre 1', 'Genre 2', 'Genre 3')) %>%
+  col_is_numeric(columns = c('Duration', 'Rating')) ->
+  worst_imdb_agent
+# Best IMDB Dataset
+best_imdb_agent %>%
+  # Technically Correct Checks
+  col_is_date(columns='Year') %>%
+  col_is_factor(columns = vars('Title', 'Genre 1', 'Genre 2', 'Genre 3')) %>% 
+  col_is_numeric(columns = c('Duration', 'Rating')) ->
+  best_imdb_agent
+# Movie API Dataset
+movie_api_agent %>%
+  # Technically Correct Checks
+  col_is_date(columns='production_year') %>%
+  col_is_factor(columns=vars('movie_name','rating','creative_type','source','production_method','genre','sequel')) %>%
+  col_is_numeric(columns= c('running_time','sequel')) ->
+  movie_api_agent
+# Worst RT Dataset
+worst_rt_agent %>%
+  # Technically Correct Checks
+  col_is_date(columns='Year') %>%
+  col_is_factor(columns=vars('Title','Genre 1','Genre 2','Genre 3','Genre 4','CriticConsensus')) %>%
+  col_is_logical(columns='CriticRating') %>%
+  col_is_numeric(columns= c('Duration')) ->
+  worst_rt_agent
+# Best RT Dataset
+best_rt_agent %>%
+  # Technically Correct Checks
+  col_is_date(columns='Year') %>%
+  col_is_factor(columns='Title') %>%
+  col_is_numeric(columns= c('CriticRating','AudienceRating')) ->
+  best_rt_agent
+# Step 4
+# Worst IMDB Dataset
+worst_imdb_results = interrogate(worst_imdb_agent)
+worst_imdb_results %>% export_report(filename = 'worst_imdb_validation.html')
+# Best IMDB Dataset
+best_imdb_results = interrogate(best_imdb_agent)
+best_imdb_results %>% export_report(filename = 'best_imdb_validation.html')
+# Movie API Dataset
+movie_api_results = interrogate(movie_api_agent)
+movie_api_results %>% export_report(filename = 'movie_api_validation.html')
+# Worst RT Dataset
+worst_rt_results = interrogate(worst_rt_agent)
+worst_rt_results %>% export_report(filename = 'worst_rt_validation.html')
+# Best RT Dataset
+best_rt_results = interrogate(best_rt_agent)
+best_rt_results %>% export_report(filename = 'best_rt_validation.html')
+
+
+## Visualizing the Data ----------------------------------------------------
+# The scatterplot would not work correctly unless the gross profit and production budget data were taken out from the rest of the Movie API dataset
+Budget_vs_Profit_Dataset = read_csv('https://github.com/Kurtzm23/ISA401-FinalProject/raw/main/Datasets/Budget%20vs%20Gross%20Profit%20Visual/Budget_vs_Profit_Visual.csv')
+gross_profit = Budget_vs_Profit_Dataset$'Gross Profit'
+budget <- Budget_vs_Profit_Dataset$'Production Budget'
+ggplot(aes(x=gross_profit,y=budget), data=Budget_vs_Profit_Dataset)+
+  geom_point()+
+  geom_smooth(method=lm, level=0.99)+
+  xlim(-200000000,1000000000)+
+  ylim(0,300000000)+
+  geom_vline(xintercept=0, color='red', size=1.5)
